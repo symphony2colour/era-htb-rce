@@ -228,5 +228,4 @@ if __name__ == "__main__":
     else:
         exploit(admin_session, files, ip, port)
             listener_proc.terminate()
-    else:
-        exploit(admin_session, files, ip, port)
+
