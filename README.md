@@ -14,6 +14,7 @@ This Python script demonstrates a full exploitation chain for the *Era* machine 
 - Reset of the `admin` account’s security questions
 - Login as `admin` via security bypass
 - Enumeration of available file IDs
+- File upload (if no files were found on server)
 - Triggering **remote code execution** via a misused `ssh2.exec` handler
 - Optional automatic listener launch via `nc`
 
