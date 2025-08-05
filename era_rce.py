@@ -143,7 +143,7 @@ def get_admin(session_value):
     else:
         logging.warning("[-] Something went wrong...")   
         
-    response = admin_session.get("http://file.era.htb/manage.php")
+    response = admin_session.get(DASHBOARD_URL)
 
     if admin_response.status_code == 200 and "login.php" not in response.text:
         logging.info("[+] Reached dashboard as admin")
