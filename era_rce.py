@@ -1,5 +1,4 @@
 # Made by copper_nail aka symphony2colour
-# Will publish after machine retirement
 
 import argparse
 import base64
