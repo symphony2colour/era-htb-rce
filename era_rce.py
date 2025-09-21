@@ -1,4 +1,3 @@
-# PRIVATE PoC for HTB Era (active machine) - DO NOT SHARE PUBLICLY until retirement
 # Made by copper_nail aka symphony2colour
 # Will publish after machine retirement
 
