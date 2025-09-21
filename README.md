@@ -1,11 +1,3 @@
-# 🚫 PRIVATE PoC: RCE Exploit for HTB "Era" (Active Machine)
-
-> 🔒 **DO NOT PUBLISH OR DISTRIBUTE THIS FILE UNTIL THE MACHINE IS RETIRED FROM HACK THE BOX.**
->
-> This exploit is strictly for educational and internal use while the machine is still active.
-
----
-
 ## 📌 Description
 
 This Python script demonstrates a full exploitation chain for the *Era* machine on Hack The Box. It performs:
